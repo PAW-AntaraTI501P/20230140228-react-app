@@ -1,13 +1,32 @@
-// src/components/TodoForm.js
-
 import React, { useState, useEffect } from "react";
+import Modal from "react-modal";
+import styled from "styled-components";
 
-const TodoForm = ({ onAddTodo, editTodo }) => {
+const Input = styled.input`
+  padding: 10px;
+  width: 80%;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  background-color: ${(props) => (props.edit ? "#2196F3" : "#87CEEB")};
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  margin: 5px;
+`;
+
+const TodoForm = ({ onAddTodo, editTodo, isOpen, onClose }) => {
   const [task, setTask] = useState("");
 
   useEffect(() => {
     if (editTodo) {
-      setTask(editTodo.task); // isi input dengan task yg mau diedit
+      setTask(editTodo.task);
     } else {
       setTask("");
     }
@@ -18,40 +37,29 @@ const TodoForm = ({ onAddTodo, editTodo }) => {
     if (task.trim() === "") return;
     onAddTodo(task);
     setTask("");
+    onClose(); // tutup modal setelah submit
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ marginBottom: "20px", textAlign: "center" }}
-    >
+    <Modal isOpen={isOpen} onRequestClose={onClose} ariaHideApp={false}>
       <h2>{editTodo ? "Edit Todo" : "Tambah Todo Baru"}</h2>
-      <input
-        type="text"
-        placeholder="Tambahkan tugas baru..."
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-        style={{
-          padding: "10px",
-          width: "60%",
-          marginRight: "10px",
-          border: "1px solid #ccc",
-          borderRadius: "5px",
-        }}
-      />
-      <button
-        type="submit"
-        style={{
-          padding: "10px 20px",
-          backgroundColor: editTodo ? "#2196F3" : "#87CEEB",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        {editTodo ? "Update" : "Tambah"}
-      </button>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <Input
+          type="text"
+          placeholder="Tambahkan tugas baru..."
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+        />
+        <div>
+          <Button type="submit" edit={editTodo}>
+            {editTodo ? "Update" : "Tambah"}
+          </Button>
+          <Button type="button" onClick={onClose}>
+            Batal
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
