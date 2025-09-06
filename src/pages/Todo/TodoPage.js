@@ -2,6 +2,16 @@ import React, { useState, useEffect, useCallback } from "react";
 import TodoForm from "../../components/TodoForm.js";
 import TodoList from "../../components/TodoList.js";
 import SearchInput from "../../components/SearchInput.js";
+import { data } from "react-router-dom";
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  console.log("Token yg dipakai:", token);
+  return {
+    "content-type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
 
 const TodoPage = () => {
   const [todos, setTodos] = useState([]);
@@ -17,20 +27,27 @@ const TodoPage = () => {
       ? `/api/todos?search=${encodeURIComponent(searchQuery)}`
       : "/api/todos";
 
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return response.json();
-      })
-      .then((data) => {
-        setTodos(data.todos);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setTodos([]);
-      })
-      .finally(() => setLoading(false));
+    fetch(url, { headers: getAuthHeaders() })
+  .then(async (response) => {
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${data?.message || "No message"}`
+      );
+    }
+    return data;
+  })
+  .then((data) => {
+    console.log("Data dari backend:", data);
+    setTodos(data.todos || []);
+    setError(null);
+  })
+  .catch((err) => {
+    console.error("Fetch error:", err);
+    setError(err.message);
+    setTodos([]);
+  })
+  .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -45,7 +62,7 @@ const TodoPage = () => {
       // mode edit
       fetch(`/api/todos/${editTodo.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ task }),
       })
         .then((response) => response.json())
@@ -63,7 +80,7 @@ const TodoPage = () => {
       // mode tambah
       fetch("/api/todos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ task }),
       })
         .then((response) => response.json())
@@ -76,7 +93,10 @@ const TodoPage = () => {
   };
 
   const handleDeleteTodo = (id) => {
-    fetch(`/api/todos/${id}`, { method: "DELETE" })
+    fetch(`/api/todos/${id}`, { 
+      method: "DELETE", 
+      headers: getAuthHeaders(),
+    })
       .then(() => {
         setTodos(todos.filter((todo) => todo.id !== id));
       })
@@ -86,7 +106,7 @@ const TodoPage = () => {
   const handleToggleCompleted = (id, completed) => {
     fetch(`/api/todos/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ completed: !completed }),
     })
       .then(() => {

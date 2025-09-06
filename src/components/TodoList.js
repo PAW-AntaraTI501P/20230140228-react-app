@@ -69,7 +69,6 @@ const TodoList = ({ todos, onToggleCompleted, onDeleteTodo, onEditTodo }) => {
 
   return (
     <DataTable
-      title="Daftar Todo"
       columns={columns}
       data={todos}
       pagination
